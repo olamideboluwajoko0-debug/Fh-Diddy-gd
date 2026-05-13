@@ -1,0 +1,17 @@
+archive
+archives
+backup
+backup.php
+backup.sql
+backup.tar.gz
+backup.zip
+backup/db
+backups
+database_backup
+db_backup.sql
+dump.sql
+old
+old_site
+restore
+site_backup
+www_backup

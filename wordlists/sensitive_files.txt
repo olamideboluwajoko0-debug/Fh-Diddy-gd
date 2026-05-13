@@ -1,0 +1,17 @@
+.git/HEAD
+.git/config
+.svn/entries
+.well-known/security.txt
+access_log
+crossdomain.xml
+debug.php
+error_log
+info.php
+log
+logs
+robots.txt
+security.txt
+server-info
+server-status
+sitemap.xml
+test.php

@@ -1,0 +1,15 @@
+account/dashboard
+console
+dash
+dashboard
+dashboard/home
+home
+index
+index.html
+index.php
+main
+overview
+panel
+profile
+settings
+user/dashboard
