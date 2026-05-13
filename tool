@@ -1,3 +1,4 @@
+
 import os
 
 # ─────────────────────────────────────────
@@ -65,10 +66,6 @@ SENSITIVE_FILES = [
     "access_log", "logs", "log",
 ]
 
-# ─────────────────────────────────────────
-#  All categories mapped
-# ─────────────────────────────────────────
-
 CATEGORIES = {
     "admin_panels":    ADMIN_PANELS,
     "login_pages":     LOGIN_PAGES,
@@ -80,37 +77,38 @@ CATEGORIES = {
 }
 
 
-def save_wordlist(name, words, output_dir="wordlists"):
-    """Save a wordlist to a .txt file."""
+def clean_domain(domain):
+    """Strip protocol and trailing slash from domain."""
+    domain = domain.strip()
+    if domain.startswith("https://"):
+        domain = domain[8:]
+    elif domain.startswith("http://"):
+        domain = domain[7:]
+    domain = domain.rstrip("/")
+    return domain
+
+
+def generate_urls(domain, words):
+    """Generate full URLs from domain + paths."""
+    return [f"http://{domain}/{path}" for path in words]
+
+
+def save_urls(filename, urls, output_dir="wordlists"):
+    """Save URLs to a txt file."""
     os.makedirs(output_dir, exist_ok=True)
-    filepath = os.path.join(output_dir, f"{name}.txt")
+    filepath = os.path.join(output_dir, filename)
     with open(filepath, "w") as f:
-        f.write("\n".join(sorted(set(words))))
-    print(f"  [+] Saved: {filepath}  ({len(words)} entries)")
+        f.write("\n".join(urls))
+    print(f"  [+] Saved: {filepath}  ({len(urls)} URLs)")
     return filepath
 
 
-def generate_all(output_dir="wordlists"):
-    """Generate individual wordlists + one combined master list."""
-    print("\n[*] Generating wordlists...\n")
-    all_words = []
-
-    for category, words in CATEGORIES.items():
-        save_wordlist(category, words, output_dir)
-        all_words.extend(words)
-
-    # Master combined list (deduplicated)
-    save_wordlist("master_wordlist", all_words, output_dir)
-    print(f"\n[✓] Done! {len(set(all_words))} unique entries in master list.")
-    print(f"[✓] Files saved to '{output_dir}/' folder.\n")
-
-
 def show_menu():
+    print("\n" + "=" * 45)
+    print("   Web Recon URL Generator")
+    print("   For educational purposes only 🔐")
     print("=" * 45)
-    print("   Web Recon Wordlist Generator")
-    print("   by: you 😈")
-    print("=" * 45)
-    print("\nCategories available:")
+    print("\nCategories:")
     for i, cat in enumerate(CATEGORIES.keys(), 1):
         print(f"  {i}. {cat}")
     print(f"  {len(CATEGORIES)+1}. Generate ALL + master list")
@@ -119,22 +117,43 @@ def show_menu():
 
 
 def main():
+    # Get domain from user
+    domain_input = input("Enter target domain (e.g. example.com): ").strip()
+    if not domain_input:
+        print("No domain entered. Exiting.")
+        return
+
+    domain = clean_domain(domain_input)
+    print(f"\n[*] Target: http://{domain}/\n")
+
     show_menu()
     choice = input("Choose an option: ").strip()
 
     cats = list(CATEGORIES.keys())
+    safe_domain = domain.replace(".", "_").replace("/", "_")
 
     if choice == "0":
-        print("Exiting. Happy hacking 🔥")
+        print("Exiting. Happy learning 🔥")
 
     elif choice == str(len(CATEGORIES) + 1):
-        generate_all()
+        print(f"\n[*] Generating all categories for {domain}...\n")
+        all_urls = []
+        for category, words in CATEGORIES.items():
+            urls = generate_urls(domain, words)
+            save_urls(f"{safe_domain}_{category}.txt", urls)
+            all_urls.extend(urls)
+
+        # Master list
+        all_urls = sorted(set(all_urls))
+        save_urls(f"{safe_domain}_master.txt", all_urls)
+        print(f"\n[✓] Done! {len(all_urls)} unique URLs saved to 'wordlists/' folder.\n")
 
     elif choice.isdigit() and 1 <= int(choice) <= len(cats):
         selected = cats[int(choice) - 1]
-        print(f"\n[*] Generating: {selected}\n")
-        save_wordlist(selected, CATEGORIES[selected])
-        print("\n[✓] Done!\n")
+        urls = generate_urls(domain, CATEGORIES[selected])
+        print(f"\n[*] Generating {selected} for {domain}...\n")
+        save_urls(f"{safe_domain}_{selected}.txt", urls)
+        print(f"\n[✓] Done! Check the 'wordlists/' folder.\n")
 
     else:
         print("Invalid choice. Run the script again.")
